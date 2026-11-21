@@ -6,463 +6,681 @@
   <title>우리 가족 달력</title>
   <style>
     :root {
-      --bg: #f5f7fa;
+      --bg: #f5f7fb;
       --card: #ffffff;
       --text: #1f2937;
-      --sub: #6b7280;
+      --muted: #6b7280;
       --border: #e5e7eb;
       --primary: #2563eb;
-      --sun: #ef4444;
-      --sat: #3b82f6;
+      --sunday: #ef4444;
+      --saturday: #2563eb;
+      --today-bg: #eff6ff;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      padding-bottom: 40px;
-    }
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 16px 12px;
+      margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+      background: var(--bg); color: var(--text); padding-bottom: 40px;
     }
     header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 14px;
+      background: var(--card); padding: 14px 16px; border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 20; display: flex; flex-direction: column; gap: 10px;
     }
-    .month-nav {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+    .header-top { display: flex; justify-content: space-between; align-items: center; }
+    .month-nav { display: flex; align-items: center; gap: 10px; }
     .month-nav button {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      width: 36px;
-      height: 36px;
-      font-size: 18px;
-      cursor: pointer;
-      color: var(--text);
+      background: #f3f4f6; border: none; border-radius: 8px; padding: 6px 12px;
+      font-size: 16px; font-weight: bold; cursor: pointer; color: var(--text);
     }
-    .month-title {
-      font-size: 20px;
-      font-weight: 700;
-      min-width: 115px;
-      text-align: center;
+    .month-title { font-size: 18px; font-weight: 800; min-width: 115px; text-align: center; }
+    .header-actions { display: flex; gap: 6px; }
+    .btn-sm {
+      background: #f3f4f6; border: 1px solid var(--border); border-radius: 8px;
+      padding: 6px 10px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text);
     }
-    .today-btn {
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      padding: 8px 14px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
+    .btn-primary { background: var(--primary); color: #fff; border: none; }
+    .member-bar {
+      display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none;
     }
-    .legend {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 12px;
-      font-size: 12px;
-      color: var(--sub);
-      padding: 0 4px;
+    .member-bar::-webkit-scrollbar { display: none; }
+    .member-chip {
+      display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px;
+      border-radius: 999px; font-size: 12px; font-weight: 600; background: #f3f4f6;
+      border: 1.5px solid transparent; white-space: nowrap; cursor: pointer;
     }
-    .legend-item { display: flex; align-items: center; gap: 4px; }
+    .member-chip.active { border-color: var(--text); background: #fff; }
     .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 
-    .calendar-card {
-      background: var(--card);
-      border-radius: 16px;
-      padding: 12px 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
-      margin-bottom: 16px;
+    .calendar-wrap { max-width: 900px; margin: 12px auto; padding: 0 8px; }
+    .weekdays {
+      display: grid; grid-template-columns: repeat(7, 1fr); text-align: center;
+      font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 6px;
     }
-    .weekdays, .days {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      text-align: center;
-    }
-    .weekdays div {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--sub);
-      padding-bottom: 8px;
-    }
-    .weekdays div:first-child { color: var(--sun); }
-    .weekdays div:last-child { color: var(--sat); }
+    .weekdays div:first-child { color: var(--sunday); }
+    .weekdays div:last-child { color: var(--saturday); }
 
-    .day {
-      min-height: 62px;
-      padding: 4px 2px;
-      border-radius: 10px;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      transition: background 0.15s;
+    .days-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
     }
-    .day:active { background: #eff6ff; }
-    .day.selected { background: #dbeafe; outline: 2px solid var(--primary); }
-    .day.other-month { opacity: 0.3; }
-    .day-num {
-      font-size: 13px;
-      font-weight: 600;
-      width: 24px;
-      height: 24px;
-      line-height: 24px;
-      border-radius: 50%;
+    .day-cell {
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      min-height: 86px; padding: 4px; cursor: pointer; display: flex; flex-direction: column;
+      gap: 2px; overflow: hidden; transition: border-color 0.15s;
     }
-    .day.sun .day-num { color: var(--sun); }
-    .day.sat .day-num { color: var(--sat); }
-    .day.today .day-num {
-      background: var(--primary);
-      color: #fff !important;
+    .day-cell.other-month { opacity: 0.4; background: #fafafa; }
+    .day-cell.today { background: var(--today-bg); border-color: var(--primary); }
+    .day-cell.selected { border: 2px solid var(--primary); }
+    .day-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 2px; }
+    .day-num { font-size: 12px; font-weight: 700; line-height: 1.2; }
+    .day-num.sun, .day-num.holiday { color: var(--sunday); }
+    .day-num.sat { color: var(--saturday); }
+    .holiday-name {
+      font-size: 9px; color: var(--sunday); font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right;
     }
-    .event-dots {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 2px;
-      max-width: 100%;
-    }
-    .event-chip {
-      font-size: 10px;
-      color: #fff;
-      padding: 1px 4px;
-      border-radius: 4px;
-      max-width: 44px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      line-height: 1.3;
+    .event-pill {
+      font-size: 10px; padding: 2px 4px; border-radius: 4px; color: #fff;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600;
+      display: flex; align-items: center; gap: 2px;
     }
 
-    .panel {
-      background: var(--card);
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    .selected-panel {
+      max-width: 900px; margin: 14px auto 0; padding: 0 8px;
+    }
+    .panel-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px;
     }
     .panel-header {
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
     }
-    .event-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
+    .panel-date { font-size: 15px; font-weight: 800; }
+    .event-list { display: flex; flex-direction: column; gap: 8px; }
     .event-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 12px;
-      border-radius: 10px;
-      background: #f9fafb;
-      border-left: 4px solid #ccc;
+      border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+      display: flex; flex-direction: column; gap: 6px; cursor: pointer; background: #fafafa;
     }
-    .event-info { display: flex; flex-direction: column; gap: 2px; }
-    .event-title { font-size: 14px; font-weight: 600; }
-    .event-meta { font-size: 12px; color: var(--sub); }
-    .del-btn {
-      background: #fee2e2;
-      color: #dc2626;
-      border: none;
-      border-radius: 8px;
-      padding: 6px 10px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
+    .event-item-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .event-title-wrap { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 14px; }
+    .event-badge {
+      font-size: 11px; color: #fff; padding: 2px 7px; border-radius: 999px; font-weight: 600;
     }
-    .empty-msg {
-      font-size: 13px;
-      color: var(--sub);
-      text-align: center;
-      padding: 14px 0;
+    .event-meta { font-size: 12px; color: var(--muted); }
+    .event-thumb {
+      max-width: 140px; max-height: 110px; border-radius: 8px; object-fit: cover;
+      border: 1px solid var(--border); margin-top: 2px;
     }
+    .empty-msg { text-align: center; color: var(--muted); font-size: 13px; padding: 16px 0; }
 
-    .form-row {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      border-top: 1px solid var(--border);
-      padding-top: 14px;
+    /* Modal */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 50;
+      display: none; align-items: center; justify-content: center; padding: 14px;
     }
-    .form-inline {
-      display: flex;
-      gap: 8px;
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--card); border-radius: 16px; width: 100%; max-width: 430px;
+      max-height: 90vh; overflow-y: auto; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
-    input, select {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      font-size: 14px;
-      background: #fff;
-      color: var(--text);
+    .modal h3 { margin: 0 0 14px; font-size: 17px; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px;
+      font-size: 14px; font-family: inherit; background: #fff;
     }
-    .add-btn {
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      padding: 12px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      width: 100%;
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .preview-wrap { position: relative; display: inline-block; margin-top: 8px; }
+    .preview-wrap img { max-width: 100%; max-height: 180px; border-radius: 8px; border: 1px solid var(--border); }
+    .remove-img-btn {
+      position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.7); color: #fff;
+      border: none; border-radius: 999px; width: 24px; height: 24px; cursor: pointer; font-size: 12px;
     }
-    .status {
-      text-align: center;
-      font-size: 11px;
-      color: var(--sub);
-      margin-top: 12px;
+    .modal-footer { display: flex; justify-content: space-between; gap: 8px; margin-top: 16px; }
+    .btn {
+      padding: 10px 14px; border-radius: 10px; font-size: 14px; font-weight: 700;
+      cursor: pointer; border: none;
+    }
+    .btn-cancel { background: #f3f4f6; color: var(--text); }
+    .btn-danger { background: #fee2e2; color: #dc2626; }
+    .btn-save { background: var(--primary); color: #fff; flex: 1; }
+
+    .member-manage-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .member-manage-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+    }
+    .img-viewer {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100;
+      display: none; align-items: center; justify-content: center; padding: 16px;
+    }
+    .img-viewer.open { display: flex; }
+    .img-viewer img { max-width: 100%; max-height: 92vh; border-radius: 8px; }
+
+    .status-bar {
+      text-align: center; font-size: 12px; color: var(--muted); margin-top: 16px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <div class="month-nav">
-        <button id="prevBtn" aria-label="이전 달">‹</button>
-        <div class="month-title" id="monthTitle"></div>
-        <button id="nextBtn" aria-label="다음 달">›</button>
-      </div>
-      <button class="today-btn" id="todayBtn">오늘</button>
-    </header>
 
-    <div class="legend">
-      <div class="legend-item"><span class="dot" style="background:#10b981"></span>가족</div>
-      <div class="legend-item"><span class="dot" style="background:#3b82f6"></span>아빠</div>
-      <div class="legend-item"><span class="dot" style="background:#ec4899"></span>엄마</div>
-      <div class="legend-item"><span class="dot" style="background:#f59e0b"></span>아이</div>
+<header>
+  <div class="header-top">
+    <div class="month-nav">
+      <button id="prevMonthBtn">◀</button>
+      <div class="month-title" id="monthTitle"></div>
+      <button id="nextMonthBtn">▶</button>
     </div>
-
-    <div class="calendar-card">
-      <div class="weekdays">
-        <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
-      </div>
-      <div class="days" id="calendarDays"></div>
+    <div class="header-actions">
+      <button class="btn-sm" id="todayBtn">오늘</button>
+      <button class="btn-sm" id="manageMembersBtn">👨‍👩‍👧 가족 관리</button>
     </div>
-
-    <div class="panel">
-      <div class="panel-header">
-        <span id="selectedDateTitle">날짜를 선택하세요</span>
-      </div>
-      <div class="event-list" id="eventList"></div>
-
-      <form class="form-row" id="eventForm">
-        <div class="form-inline">
-          <select id="memberSelect" style="flex:1">
-            <option value="가족">🟢 가족</option>
-            <option value="아빠">🔵 아빠</option>
-            <option value="엄마">🩷 엄마</option>
-            <option value="아이">🟠 아이</option>
-          </select>
-          <input type="time" id="timeInput" style="flex:1" />
-        </div>
-        <input type="text" id="titleInput" placeholder="일정 내용을 입력하세요 (예: 병원 예약)" required />
-        <button type="submit" class="add-btn">일정 추가</button>
-      </form>
-    </div>
-
-    <div class="status" id="syncStatus">실시간 동기화 연결 중...</div>
   </div>
+  <div class="member-bar" id="memberFilterBar"></div>
+</header>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+<div class="calendar-wrap">
+  <div class="weekdays">
+    <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+  </div>
+  <div class="days-grid" id="daysGrid"></div>
+</div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBNAtp85XWKMdtbZE0wH2Sgbeg59qy4iMg",
-      authDomain: "family-cal-b7111.firebaseapp.com",
-      projectId: "family-cal-b7111",
-      storageBucket: "family-cal-b7111.firebasestorage.app",
-      messagingSenderId: "294593678282",
-      appId: "1:294593678282:web:92be62847ee40a32439d33",
-      measurementId: "G-BKK91WD77Z"
-    };
+<div class="selected-panel">
+  <div class="panel-card">
+    <div class="panel-header">
+      <div class="panel-date" id="selectedDateLabel"></div>
+      <button class="btn-sm btn-primary" id="addEventBtn">+ 일정 추가</button>
+    </div>
+    <div class="event-list" id="eventList"></div>
+  </div>
+</div>
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const eventsCol = collection(db, "events");
+<div class="status-bar" id="statusBar">🔄 서버 연결 중...</div>
 
-    const MEMBER_COLORS = {
-      "가족": "#10b981",
-      "아빠": "#3b82f6",
-      "엄마": "#ec4899",
-      "아이": "#f59e0b"
-    };
+<!-- 일정 추가/수정 모달 -->
+<div class="modal-backdrop" id="eventModal">
+  <div class="modal">
+    <h3 id="eventModalTitle">일정 추가</h3>
+    <input type="hidden" id="editEventId" />
+    <div class="form-group">
+      <label>일정 제목 *</label>
+      <input type="text" id="evTitle" placeholder="예: 병원 진료, 가족 외식" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>날짜 *</label>
+        <input type="date" id="evDate" />
+      </div>
+      <div class="form-group">
+        <label>시간 (선택)</label>
+        <input type="time" id="evTime" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>가족 구성원</label>
+      <select id="evMember"></select>
+    </div>
+    <div class="form-group">
+      <label>메모 (선택)</label>
+      <textarea id="evMemo" rows="2" placeholder="장소나 참고사항"></textarea>
+    </div>
+    <div class="form-group">
+      <label>사진 / 스크린샷 첨부 (자동 압축)</label>
+      <input type="file" id="evImageFile" accept="image/*" />
+      <div class="preview-wrap" id="imgPreviewWrap" style="display:none;">
+        <img id="imgPreview" src="" alt="미리보기" />
+        <button type="button" class="remove-img-btn" id="removeImgBtn">✕</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-danger" id="deleteEventBtn" style="display:none;">삭제</button>
+      <button type="button" class="btn btn-cancel" id="closeEventModalBtn">취소</button>
+      <button type="button" class="btn btn-save" id="saveEventBtn">저장</button>
+    </div>
+  </div>
+</div>
 
-    const today = new Date();
-    let currentYear = today.getFullYear();
-    let currentMonth = today.getMonth();
-    let selectedDate = formatDate(today.getFullYear(), today.getMonth(), today.getDate());
-    let allEvents = [];
+<!-- 가족 관리 모달 -->
+<div class="modal-backdrop" id="memberModal">
+  <div class="modal">
+    <h3>👨‍👩‍👧 가족 구성원 관리</h3>
+    <div class="member-manage-list" id="memberManageList"></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>새 가족 이름</label>
+        <input type="text" id="newMemberName" placeholder="예: 할머니, 아윤" />
+      </div>
+      <div class="form-group">
+        <label>표시 색상</label>
+        <input type="color" id="newMemberColor" value="#8b5cf6" style="height:39px; padding:2px;" />
+      </div>
+    </div>
+    <button type="button" class="btn btn-save" id="addMemberBtn" style="width:100%; margin-bottom:10px;">+ 가족 추가</button>
+    <button type="button" class="btn btn-cancel" id="closeMemberModalBtn" style="width:100%;">닫기</button>
+  </div>
+</div>
 
-    const monthTitleEl = document.getElementById("monthTitle");
-    const calendarDaysEl = document.getElementById("calendarDays");
-    const selectedDateTitleEl = document.getElementById("selectedDateTitle");
-    const eventListEl = document.getElementById("eventList");
-    const syncStatusEl = document.getElementById("syncStatus");
+<!-- 사진 확대 보기 -->
+<div class="img-viewer" id="imgViewer">
+  <img id="imgViewerSrc" src="" alt="확대 이미지" />
+</div>
 
-    function formatDate(y, m, d) {
-      return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-    }
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, setDoc, onSnapshot, query
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    function renderCalendar() {
-      monthTitleEl.textContent = `${currentYear}년 ${currentMonth + 1}월`;
-      calendarDaysEl.innerHTML = "";
+  const firebaseConfig = {
+    apiKey: "AIzaSyBNAtp85XWKMdtbZE0wH2Sgbeg59qy4iMg",
+    authDomain: "family-cal-b7111.firebaseapp.com",
+    projectId: "family-cal-b7111",
+    storageBucket: "family-cal-b7111.firebasestorage.app",
+    messagingSenderId: "294593678282",
+    appId: "1:294593678282:web:92be62847ee40a32439d33",
+    measurementId: "G-BKK91WD77Z"
+  };
 
-      const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-      const lastDate = new Date(currentYear, currentMonth + 1, 0).getDate();
-      const prevLastDate = new Date(currentYear, currentMonth, 0).getDate();
-      const todayStr = formatDate(today.getFullYear(), today.getMonth(), today.getDate());
+  // 대한민국 공휴일 (2026 ~ 2027)
+  const HOLIDAYS = {
+    "2026-01-01": "신정",
+    "2026-02-16": "설날연휴", "2026-02-17": "설날", "2026-02-18": "설날연휴",
+    "2026-03-01": "삼일절", "2026-03-02": "대체공휴일",
+    "2026-05-05": "어린이날",
+    "2026-05-24": "부처님오신날", "2026-05-25": "대체공휴일",
+    "2026-06-03": "지방선거", "2026-06-06": "현충일",
+    "2026-08-15": "광복절", "2026-08-17": "대체공휴일",
+    "2026-09-24": "추석연휴", "2026-09-25": "추석", "2026-09-26": "추석연휴",
+    "2026-10-03": "개천절", "2026-10-05": "대체공휴일",
+    "2026-10-09": "한글날", "2026-12-25": "성탄절",
+    "2027-01-01": "신정",
+    "2027-02-06": "설날연휴", "2027-02-07": "설날", "2027-02-08": "설날연휴", "2027-02-09": "대체공휴일",
+    "2027-03-01": "삼일절",
+    "2027-05-05": "어린이날", "2027-05-13": "부처님오신날",
+    "2027-06-06": "현충일",
+    "2027-08-15": "광복절", "2027-08-16": "대체공휴일",
+    "2027-09-14": "추석연휴", "2027-09-15": "추석", "2027-09-16": "추석연휴",
+    "2027-10-03": "개천절", "2027-10-04": "대체공휴일",
+    "2027-10-09": "한글날", "2027-10-11": "대체공휴일",
+    "2027-12-25": "성탄절", "2027-12-27": "대체공휴일"
+  };
 
-      // 이전 달 빈칸
-      for (let i = firstDay - 1; i >= 0; i--) {
-        const div = document.createElement("div");
-        div.className = "day other-month";
-        div.innerHTML = `<div class="day-num">${prevLastDate - i}</div>`;
-        calendarDaysEl.appendChild(div);
-      }
+  const DEFAULT_MEMBERS = [
+    { name: "가족", color: "#2563eb" },
+    { name: "아빠", color: "#0ea5e9" },
+    { name: "엄마", color: "#ec4899" },
+    { name: "아이", color: "#10b981" }
+  ];
 
-      // 이번 달 날짜
-      for (let d = 1; d <= lastDate; d++) {
-        const dateStr = formatDate(currentYear, currentMonth, d);
-        const dayOfWeek = new Date(currentYear, currentMonth, d).getDay();
-        const dayEvents = allEvents.filter(e => e.date === dateStr);
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-        const div = document.createElement("div");
-        div.className = "day";
-        if (dayOfWeek === 0) div.classList.add("sun");
-        if (dayOfWeek === 6) div.classList.add("sat");
-        if (dateStr === todayStr) div.classList.add("today");
-        if (dateStr === selectedDate) div.classList.add("selected");
+  const today = new Date();
+  let viewYear = today.getFullYear();
+  let viewMonth = today.getMonth();
+  let selectedDate = formatDate(today);
+  let activeMemberFilter = "전체";
+  let events = [];
+  let members = [...DEFAULT_MEMBERS];
+  let currentImageBase64 = "";
 
-        let chipsHtml = "";
-        dayEvents.slice(0, 2).forEach(ev => {
-          const color = MEMBER_COLORS[ev.member] || "#6b7280";
-          chipsHtml += `<div class="event-chip" style="background:${color}">${ev.title}</div>`;
-        });
-        if (dayEvents.length > 2) {
-          chipsHtml += `<div style="font-size:9px;color:#6b7280">+${dayEvents.length - 2}</div>`;
-        }
+  const statusBar = document.getElementById("statusBar");
 
-        div.innerHTML = `<div class="day-num">${d}</div><div class="event-dots">${chipsHtml}</div>`;
-        div.onclick = () => {
-          selectedDate = dateStr;
-          renderCalendar();
-          renderSelectedEvents();
-        };
-        calendarDaysEl.appendChild(div);
-      }
-    }
+  function formatDate(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
 
-    function renderSelectedEvents() {
-      const [y, m, d] = selectedDate.split("-");
-      selectedDateTitleEl.textContent = `${Number(y)}년 ${Number(m)}월 ${Number(d)}일 일정`;
+  function getMemberColor(name) {
+    const found = members.find(m => m.name === name);
+    return found ? found.color : "#6366f1";
+  }
 
-      const dayEvents = allEvents
-        .filter(e => e.date === selectedDate)
-        .sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
-
-      if (dayEvents.length === 0) {
-        eventListEl.innerHTML = `<div class="empty-msg">등록된 일정이 없습니다.</div>`;
-        return;
-      }
-
-      eventListEl.innerHTML = "";
-      dayEvents.forEach(ev => {
-        const color = MEMBER_COLORS[ev.member] || "#6b7280";
-        const item = document.createElement("div");
-        item.className = "event-item";
-        item.style.borderLeftColor = color;
-        item.innerHTML = `
-          <div class="event-info">
-            <div class="event-title">${ev.title}</div>
-            <div class="event-meta">${ev.member}${ev.time ? " · " + ev.time : ""}</div>
-          </div>
-          <button class="del-btn">삭제</button>
-        `;
-        item.querySelector(".del-btn").onclick = async () => {
-          if (confirm(`'${ev.title}' 일정을 삭제할까요?`)) {
-            await deleteDoc(doc(db, "events", ev.id));
-          }
-        };
-        eventListEl.appendChild(item);
-      });
-    }
-
-    // 실시간 Firestore 구독
-    const q = query(eventsCol, orderBy("createdAt", "asc"));
-    onSnapshot(q, (snapshot) => {
-      allEvents = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      syncStatusEl.textContent = "🟢 실시간 동기화 완료";
-      renderCalendar();
-      renderSelectedEvents();
-    }, (err) => {
-      console.error(err);
-      syncStatusEl.textContent = "⚠️ 연결 오류 (Firestore 설정을 확인해 주세요)";
-    });
-
-    // 일정 추가
-    document.getElementById("eventForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const titleInput = document.getElementById("titleInput");
-      const memberSelect = document.getElementById("memberSelect");
-      const timeInput = document.getElementById("timeInput");
-      const title = titleInput.value.trim();
-      if (!title) return;
-
-      await addDoc(eventsCol, {
-        date: selectedDate,
-        member: memberSelect.value,
-        time: timeInput.value || "",
-        title,
-        createdAt: Date.now()
-      });
-
-      titleInput.value = "";
-      timeInput.value = "";
-    });
-
-    // 월 이동 버튼
-    document.getElementById("prevBtn").onclick = () => {
-      currentMonth--;
-      if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-      renderCalendar();
-    };
-    document.getElementById("nextBtn").onclick = () => {
-      currentMonth++;
-      if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-      renderCalendar();
-    };
-    document.getElementById("todayBtn").onclick = () => {
-      currentYear = today.getFullYear();
-      currentMonth = today.getMonth();
-      selectedDate = formatDate(today.getFullYear(), today.getMonth(), today.getDate());
-      renderCalendar();
-      renderSelectedEvents();
-    };
-
+  // Firestore 실시간 구독: 일정
+  onSnapshot(query(collection(db, "events")), (snapshot) => {
+    events = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    statusBar.textContent = "🟢 실시간 동기화 완료";
     renderCalendar();
     renderSelectedEvents();
-  </script>
+  }, (err) => {
+    console.error(err);
+    statusBar.textContent = "🔴 연결 오류 (firebaseConfig 또는 규칙 확인)";
+  });
+
+  // Firestore 실시간 구독: 가족 구성원
+  onSnapshot(doc(db, "settings", "members"), (docSnap) => {
+    if (docSnap.exists() && Array.isArray(docSnap.data().list) && docSnap.data().list.length > 0) {
+      members = docSnap.data().list;
+    } else {
+      members = [...DEFAULT_MEMBERS];
+    }
+    renderMemberFilter();
+    renderMemberSelect();
+    renderMemberManageList();
+    renderCalendar();
+    renderSelectedEvents();
+  });
+
+  async function saveMembersToDB(newList) {
+    await setDoc(doc(db, "settings", "members"), { list: newList });
+  }
+
+  function renderMemberFilter() {
+    const bar = document.getElementById("memberFilterBar");
+    bar.innerHTML = "";
+    const allChip = document.createElement("div");
+    allChip.className = `member-chip ${activeMemberFilter === "전체" ? "active" : ""}`;
+    allChip.textContent = "전체";
+    allChip.onclick = () => { activeMemberFilter = "전체"; renderMemberFilter(); renderCalendar(); renderSelectedEvents(); };
+    bar.appendChild(allChip);
+
+    members.forEach(m => {
+      const chip = document.createElement("div");
+      chip.className = `member-chip ${activeMemberFilter === m.name ? "active" : ""}`;
+      chip.innerHTML = `<span class="dot" style="background:${m.color}"></span>${m.name}`;
+      chip.onclick = () => { activeMemberFilter = m.name; renderMemberFilter(); renderCalendar(); renderSelectedEvents(); };
+      bar.appendChild(chip);
+    });
+  }
+
+  function renderMemberSelect() {
+    const sel = document.getElementById("evMember");
+    const prev = sel.value;
+    sel.innerHTML = "";
+    members.forEach(m => {
+      const opt = document.createElement("option");
+      opt.value = m.name;
+      opt.textContent = m.name;
+      sel.appendChild(opt);
+    });
+    if (prev && members.some(m => m.name === prev)) sel.value = prev;
+  }
+
+  function renderMemberManageList() {
+    const list = document.getElementById("memberManageList");
+    list.innerHTML = "";
+    members.forEach((m, idx) => {
+      const row = document.createElement("div");
+      row.className = "member-manage-row";
+      row.innerHTML = `
+        <div style="display:flex; align-items:center; gap:8px; font-weight:700;">
+          <span class="dot" style="background:${m.color}; width:12px; height:12px;"></span>
+          <span>${m.name}</span>
+        </div>
+        <button class="btn-sm" style="color:#dc2626;" data-idx="${idx}">삭제</button>
+      `;
+      row.querySelector("button").onclick = async () => {
+        if (members.length <= 1) return alert("최소 1명은 남아있어야 합니다.");
+        if (!confirm(`'${m.name}' 구성원을 삭제할까요?`)) return;
+        const updated = members.filter((_, i) => i !== idx);
+        await saveMembersToDB(updated);
+      };
+      list.appendChild(row);
+    });
+  }
+
+  function renderCalendar() {
+    document.getElementById("monthTitle").textContent = `${viewYear}년 ${viewMonth + 1}월`;
+    const grid = document.getElementById("daysGrid");
+    grid.innerHTML = "";
+
+    const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+    const lastDate = new Date(viewYear, viewMonth + 1, 0).getDate();
+    const prevLastDate = new Date(viewYear, viewMonth, 0).getDate();
+    const todayStr = formatDate(today);
+
+    const totalCells = Math.ceil((firstDay + lastDate) / 7) * 7;
+
+    for (let i = 0; i < totalCells; i++) {
+      let dObj;
+      let isOther = false;
+      if (i < firstDay) {
+        dObj = new Date(viewYear, viewMonth - 1, prevLastDate - firstDay + 1 + i);
+        isOther = true;
+      } else if (i >= firstDay + lastDate) {
+        dObj = new Date(viewYear, viewMonth + 1, i - (firstDay + lastDate) + 1);
+        isOther = true;
+      } else {
+        dObj = new Date(viewYear, viewMonth, i - firstDay + 1);
+      }
+
+      const dStr = formatDate(dObj);
+      const dow = dObj.getDay();
+      const holiday = HOLIDAYS[dStr];
+
+      const cell = document.createElement("div");
+      cell.className = "day-cell";
+      if (isOther) cell.classList.add("other-month");
+      if (dStr === todayStr) cell.classList.add("today");
+      if (dStr === selectedDate) cell.classList.add("selected");
+
+      const numClass = holiday ? "holiday" : (dow === 0 ? "sun" : (dow === 6 ? "sat" : ""));
+      cell.innerHTML = `
+        <div class="day-header">
+          <span class="day-num ${numClass}">${dObj.getDate()}</span>
+          ${holiday ? `<span class="holiday-name">${holiday}</span>` : ""}
+        </div>
+      `;
+
+      const dayEvents = events
+        .filter(e => e.date === dStr && (activeMemberFilter === "전체" || e.member === activeMemberFilter))
+        .sort((a, b) => (a.time || "").localeCompare(b.time || ""));
+
+      dayEvents.slice(0, 3).forEach(ev => {
+        const pill = document.createElement("div");
+        pill.className = "event-pill";
+        pill.style.background = getMemberColor(ev.member);
+        pill.textContent = (ev.image ? "📷" : "") + ev.title;
+        cell.appendChild(pill);
+      });
+      if (dayEvents.length > 3) {
+        const more = document.createElement("div");
+        more.style.fontSize = "9px";
+        more.style.color = "#6b7280";
+        more.textContent = `+${dayEvents.length - 3}개 더`;
+        cell.appendChild(more);
+      }
+
+      cell.onclick = () => {
+        selectedDate = dStr;
+        if (isOther) {
+          viewYear = dObj.getFullYear();
+          viewMonth = dObj.getMonth();
+        }
+        renderCalendar();
+        renderSelectedEvents();
+      };
+      grid.appendChild(cell);
+    }
+  }
+
+  function renderSelectedEvents() {
+    const holiday = HOLIDAYS[selectedDate];
+    document.getElementById("selectedDateLabel").textContent =
+      selectedDate + (holiday ? ` (${holiday})` : "");
+
+    const list = document.getElementById("eventList");
+    list.innerHTML = "";
+
+    const dayEvents = events
+      .filter(e => e.date === selectedDate && (activeMemberFilter === "전체" || e.member === activeMemberFilter))
+      .sort((a, b) => (a.time || "").localeCompare(b.time || ""));
+
+    if (dayEvents.length === 0) {
+      list.innerHTML = `<div class="empty-msg">등록된 일정이 없습니다. 위 '+ 일정 추가'를 눌러보세요.</div>`;
+      return;
+    }
+
+    dayEvents.forEach(ev => {
+      const item = document.createElement("div");
+      item.className = "event-item";
+      item.innerHTML = `
+        <div class="event-item-top">
+          <div class="event-title-wrap">
+            <span class="event-badge" style="background:${getMemberColor(ev.member)}">${ev.member || "가족"}</span>
+            <span>${ev.title}</span>
+          </div>
+          <span style="font-size:12px; color:#2563eb; font-weight:600;">수정 ✎</span>
+        </div>
+        ${ev.time || ev.memo ? `<div class="event-meta">${ev.time ? "⏰ " + ev.time + "  " : ""}${ev.memo || ""}</div>` : ""}
+      `;
+      if (ev.image) {
+        const img = document.createElement("img");
+        img.className = "event-thumb";
+        img.src = ev.image;
+        img.onclick = (e) => {
+          e.stopPropagation();
+          document.getElementById("imgViewerSrc").src = ev.image;
+          document.getElementById("imgViewer").classList.add("open");
+        };
+        item.appendChild(img);
+      }
+      item.onclick = () => openEventModal(ev);
+      list.appendChild(item);
+    });
+  }
+
+  // 이미지 자동 압축 (최대 900px, JPEG 0.7 -> Firestore 무료 저장 가능)
+  function compressImage(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const MAX = 900;
+          let w = img.width, h = img.height;
+          if (w > MAX || h > MAX) {
+            if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+            else { w = Math.round(w * MAX / h); h = MAX; }
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = w; canvas.height = h;
+          canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL("image/jpeg", 0.7));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // 모달 열기 (추가 / 수정 공용)
+  function openEventModal(ev = null) {
+    document.getElementById("eventModalTitle").textContent = ev ? "일정 수정" : "일정 추가";
+    document.getElementById("editEventId").value = ev ? ev.id : "";
+    document.getElementById("evTitle").value = ev ? ev.title : "";
+    document.getElementById("evDate").value = ev ? ev.date : selectedDate;
+    document.getElementById("evTime").value = ev ? (ev.time || "") : "";
+    document.getElementById("evMemo").value = ev ? (ev.memo || "") : "";
+    document.getElementById("evImageFile").value = "";
+    renderMemberSelect();
+    if (ev && ev.member) document.getElementById("evMember").value = ev.member;
+
+    currentImageBase64 = ev && ev.image ? ev.image : "";
+    updateImgPreview();
+
+    document.getElementById("deleteEventBtn").style.display = ev ? "inline-block" : "none";
+    document.getElementById("eventModal").classList.add("open");
+  }
+
+  function updateImgPreview() {
+    const wrap = document.getElementById("imgPreviewWrap");
+    if (currentImageBase64) {
+      document.getElementById("imgPreview").src = currentImageBase64;
+      wrap.style.display = "inline-block";
+    } else {
+      wrap.style.display = "none";
+    }
+  }
+
+  // 이벤트 리스너
+  document.getElementById("prevMonthBtn").onclick = () => {
+    viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } renderCalendar();
+  };
+  document.getElementById("nextMonthBtn").onclick = () => {
+    viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; } renderCalendar();
+  };
+  document.getElementById("todayBtn").onclick = () => {
+    viewYear = today.getFullYear(); viewMonth = today.getMonth(); selectedDate = formatDate(today);
+    renderCalendar(); renderSelectedEvents();
+  };
+  document.getElementById("addEventBtn").onclick = () => openEventModal(null);
+  document.getElementById("closeEventModalBtn").onclick = () => document.getElementById("eventModal").classList.remove("open");
+
+  document.getElementById("evImageFile").onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      currentImageBase64 = await compressImage(file);
+      updateImgPreview();
+    } catch {
+      alert("이미지를 불러오지 못했습니다.");
+    }
+  };
+  document.getElementById("removeImgBtn").onclick = () => {
+    currentImageBase64 = "";
+    document.getElementById("evImageFile").value = "";
+    updateImgPreview();
+  };
+
+  document.getElementById("saveEventBtn").onclick = async () => {
+    const id = document.getElementById("editEventId").value;
+    const title = document.getElementById("evTitle").value.trim();
+    const date = document.getElementById("evDate").value;
+    const time = document.getElementById("evTime").value;
+    const member = document.getElementById("evMember").value;
+    const memo = document.getElementById("evMemo").value.trim();
+
+    if (!title || !date) return alert("제목과 날짜를 입력해 주세요.");
+
+    const payload = { title, date, time, member, memo, image: currentImageBase64 || "" };
+    try {
+      if (id) {
+        await updateDoc(doc(db, "events", id), payload);
+      } else {
+        await addDoc(collection(db, "events"), payload);
+      }
+      selectedDate = date;
+      document.getElementById("eventModal").classList.remove("open");
+    } catch (err) {
+      console.error(err);
+      alert("저장에 실패했습니다. 사진 용량이 너무 크거나 연결 오류입니다.");
+    }
+  };
+
+  document.getElementById("deleteEventBtn").onclick = async () => {
+    const id = document.getElementById("editEventId").value;
+    if (!id || !confirm("이 일정을 삭제할까요?")) return;
+    await deleteDoc(doc(db, "events", id));
+    document.getElementById("eventModal").classList.remove("open");
+  };
+
+  document.getElementById("manageMembersBtn").onclick = () => {
+    renderMemberManageList();
+    document.getElementById("memberModal").classList.add("open");
+  };
+  document.getElementById("closeMemberModalBtn").onclick = () => {
+    document.getElementById("memberModal").classList.remove("open");
+  };
+  document.getElementById("addMemberBtn").onclick = async () => {
+    const name = document.getElementById("newMemberName").value.trim();
+    const color = document.getElementById("newMemberColor").value;
+    if (!name) return alert("가족 이름을 입력해 주세요.");
+    if (members.some(m => m.name === name)) return alert("이미 있는 이름입니다.");
+    await saveMembersToDB([...members, { name, color }]);
+    document.getElementById("newMemberName").value = "";
+  };
+
+  document.getElementById("imgViewer").onclick = () => {
+    document.getElementById("imgViewer").classList.remove("open");
+  };
+
+  renderMemberFilter();
+  renderCalendar();
+  renderSelectedEvents();
+</script>
 </body>
 </html>
-
