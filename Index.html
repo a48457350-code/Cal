@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>우리 가족 달력</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --card: #ffffff;
+      --text: #1f2937;
+      --sub: #6b7280;
+      --border: #e5e7eb;
+      --primary: #2563eb;
+      --sun: #ef4444;
+      --sat: #3b82f6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding-bottom: 40px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 16px 12px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .month-nav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .month-nav button {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      width: 36px;
+      height: 36px;
+      font-size: 18px;
+      cursor: pointer;
+      color: var(--text);
+    }
+    .month-title {
+      font-size: 20px;
+      font-weight: 700;
+      min-width: 115px;
+      text-align: center;
+    }
+    .today-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .legend {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: var(--sub);
+      padding: 0 4px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 4px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+    .calendar-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 12px 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+      margin-bottom: 16px;
+    }
+    .weekdays, .days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+    }
+    .weekdays div {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--sub);
+      padding-bottom: 8px;
+    }
+    .weekdays div:first-child { color: var(--sun); }
+    .weekdays div:last-child { color: var(--sat); }
+
+    .day {
+      min-height: 62px;
+      padding: 4px 2px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      transition: background 0.15s;
+    }
+    .day:active { background: #eff6ff; }
+    .day.selected { background: #dbeafe; outline: 2px solid var(--primary); }
+    .day.other-month { opacity: 0.3; }
+    .day-num {
+      font-size: 13px;
+      font-weight: 600;
+      width: 24px;
+      height: 24px;
+      line-height: 24px;
+      border-radius: 50%;
+    }
+    .day.sun .day-num { color: var(--sun); }
+    .day.sat .day-num { color: var(--sat); }
+    .day.today .day-num {
+      background: var(--primary);
+      color: #fff !important;
+    }
+    .event-dots {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 2px;
+      max-width: 100%;
+    }
+    .event-chip {
+      font-size: 10px;
+      color: #fff;
+      padding: 1px 4px;
+      border-radius: 4px;
+      max-width: 44px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      line-height: 1.3;
+    }
+
+    .panel {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    }
+    .panel-header {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .event-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .event-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #f9fafb;
+      border-left: 4px solid #ccc;
+    }
+    .event-info { display: flex; flex-direction: column; gap: 2px; }
+    .event-title { font-size: 14px; font-weight: 600; }
+    .event-meta { font-size: 12px; color: var(--sub); }
+    .del-btn {
+      background: #fee2e2;
+      color: #dc2626;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .empty-msg {
+      font-size: 13px;
+      color: var(--sub);
+      text-align: center;
+      padding: 14px 0;
+    }
+
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+    }
+    .form-inline {
+      display: flex;
+      gap: 8px;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      background: #fff;
+      color: var(--text);
+    }
+    .add-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+    }
+    .status {
+      text-align: center;
+      font-size: 11px;
+      color: var(--sub);
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="month-nav">
+        <button id="prevBtn" aria-label="이전 달">‹</button>
+        <div class="month-title" id="monthTitle"></div>
+        <button id="nextBtn" aria-label="다음 달">›</button>
+      </div>
+      <button class="today-btn" id="todayBtn">오늘</button>
+    </header>
+
+    <div class="legend">
+      <div class="legend-item"><span class="dot" style="background:#10b981"></span>가족</div>
+      <div class="legend-item"><span class="dot" style="background:#3b82f6"></span>아빠</div>
+      <div class="legend-item"><span class="dot" style="background:#ec4899"></span>엄마</div>
+      <div class="legend-item"><span class="dot" style="background:#f59e0b"></span>아이</div>
+    </div>
+
+    <div class="calendar-card">
+      <div class="weekdays">
+        <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+      </div>
+      <div class="days" id="calendarDays"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span id="selectedDateTitle">날짜를 선택하세요</span>
+      </div>
+      <div class="event-list" id="eventList"></div>
+
+      <form class="form-row" id="eventForm">
+        <div class="form-inline">
+          <select id="memberSelect" style="flex:1">
+            <option value="가족">🟢 가족</option>
+            <option value="아빠">🔵 아빠</option>
+            <option value="엄마">🩷 엄마</option>
+            <option value="아이">🟠 아이</option>
+          </select>
+          <input type="time" id="timeInput" style="flex:1" />
+        </div>
+        <input type="text" id="titleInput" placeholder="일정 내용을 입력하세요 (예: 병원 예약)" required />
+        <button type="submit" class="add-btn">일정 추가</button>
+      </form>
+    </div>
+
+    <div class="status" id="syncStatus">실시간 동기화 연결 중...</div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBNAtp85XWKMdtbZE0wH2Sgbeg59qy4iMg",
+      authDomain: "family-cal-b7111.firebaseapp.com",
+      projectId: "family-cal-b7111",
+      storageBucket: "family-cal-b7111.firebasestorage.app",
+      messagingSenderId: "294593678282",
+      appId: "1:294593678282:web:92be62847ee40a32439d33",
+      measurementId: "G-BKK91WD77Z"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const eventsCol = collection(db, "events");
+
+    const MEMBER_COLORS = {
+      "가족": "#10b981",
+      "아빠": "#3b82f6",
+      "엄마": "#ec4899",
+      "아이": "#f59e0b"
+    };
+
+    const today = new Date();
+    let currentYear = today.getFullYear();
+    let currentMonth = today.getMonth();
+    let selectedDate = formatDate(today.getFullYear(), today.getMonth(), today.getDate());
+    let allEvents = [];
+
+    const monthTitleEl = document.getElementById("monthTitle");
+    const calendarDaysEl = document.getElementById("calendarDays");
+    const selectedDateTitleEl = document.getElementById("selectedDateTitle");
+    const eventListEl = document.getElementById("eventList");
+    const syncStatusEl = document.getElementById("syncStatus");
+
+    function formatDate(y, m, d) {
+      return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    }
+
+    function renderCalendar() {
+      monthTitleEl.textContent = `${currentYear}년 ${currentMonth + 1}월`;
+      calendarDaysEl.innerHTML = "";
+
+      const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+      const lastDate = new Date(currentYear, currentMonth + 1, 0).getDate();
+      const prevLastDate = new Date(currentYear, currentMonth, 0).getDate();
+      const todayStr = formatDate(today.getFullYear(), today.getMonth(), today.getDate());
+
+      // 이전 달 빈칸
+      for (let i = firstDay - 1; i >= 0; i--) {
+        const div = document.createElement("div");
+        div.className = "day other-month";
+        div.innerHTML = `<div class="day-num">${prevLastDate - i}</div>`;
+        calendarDaysEl.appendChild(div);
+      }
+
+      // 이번 달 날짜
+      for (let d = 1; d <= lastDate; d++) {
+        const dateStr = formatDate(currentYear, currentMonth, d);
+        const dayOfWeek = new Date(currentYear, currentMonth, d).getDay();
+        const dayEvents = allEvents.filter(e => e.date === dateStr);
+
+        const div = document.createElement("div");
+        div.className = "day";
+        if (dayOfWeek === 0) div.classList.add("sun");
+        if (dayOfWeek === 6) div.classList.add("sat");
+        if (dateStr === todayStr) div.classList.add("today");
+        if (dateStr === selectedDate) div.classList.add("selected");
+
+        let chipsHtml = "";
+        dayEvents.slice(0, 2).forEach(ev => {
+          const color = MEMBER_COLORS[ev.member] || "#6b7280";
+          chipsHtml += `<div class="event-chip" style="background:${color}">${ev.title}</div>`;
+        });
+        if (dayEvents.length > 2) {
+          chipsHtml += `<div style="font-size:9px;color:#6b7280">+${dayEvents.length - 2}</div>`;
+        }
+
+        div.innerHTML = `<div class="day-num">${d}</div><div class="event-dots">${chipsHtml}</div>`;
+        div.onclick = () => {
+          selectedDate = dateStr;
+          renderCalendar();
+          renderSelectedEvents();
+        };
+        calendarDaysEl.appendChild(div);
+      }
+    }
+
+    function renderSelectedEvents() {
+      const [y, m, d] = selectedDate.split("-");
+      selectedDateTitleEl.textContent = `${Number(y)}년 ${Number(m)}월 ${Number(d)}일 일정`;
+
+      const dayEvents = allEvents
+        .filter(e => e.date === selectedDate)
+        .sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
+
+      if (dayEvents.length === 0) {
+        eventListEl.innerHTML = `<div class="empty-msg">등록된 일정이 없습니다.</div>`;
+        return;
+      }
+
+      eventListEl.innerHTML = "";
+      dayEvents.forEach(ev => {
+        const color = MEMBER_COLORS[ev.member] || "#6b7280";
+        const item = document.createElement("div");
+        item.className = "event-item";
+        item.style.borderLeftColor = color;
+        item.innerHTML = `
+          <div class="event-info">
+            <div class="event-title">${ev.title}</div>
+            <div class="event-meta">${ev.member}${ev.time ? " · " + ev.time : ""}</div>
+          </div>
+          <button class="del-btn">삭제</button>
+        `;
+        item.querySelector(".del-btn").onclick = async () => {
+          if (confirm(`'${ev.title}' 일정을 삭제할까요?`)) {
+            await deleteDoc(doc(db, "events", ev.id));
+          }
+        };
+        eventListEl.appendChild(item);
+      });
+    }
+
+    // 실시간 Firestore 구독
+    const q = query(eventsCol, orderBy("createdAt", "asc"));
+    onSnapshot(q, (snapshot) => {
+      allEvents = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      syncStatusEl.textContent = "🟢 실시간 동기화 완료";
+      renderCalendar();
+      renderSelectedEvents();
+    }, (err) => {
+      console.error(err);
+      syncStatusEl.textContent = "⚠️ 연결 오류 (Firestore 설정을 확인해 주세요)";
+    });
+
+    // 일정 추가
+    document.getElementById("eventForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const titleInput = document.getElementById("titleInput");
+      const memberSelect = document.getElementById("memberSelect");
+      const timeInput = document.getElementById("timeInput");
+      const title = titleInput.value.trim();
+      if (!title) return;
+
+      await addDoc(eventsCol, {
+        date: selectedDate,
+        member: memberSelect.value,
+        time: timeInput.value || "",
+        title,
+        createdAt: Date.now()
+      });
+
+      titleInput.value = "";
+      timeInput.value = "";
+    });
+
+    // 월 이동 버튼
+    document.getElementById("prevBtn").onclick = () => {
+      currentMonth--;
+      if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+      renderCalendar();
+    };
+    document.getElementById("nextBtn").onclick = () => {
+      currentMonth++;
+      if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+      renderCalendar();
+    };
+    document.getElementById("todayBtn").onclick = () => {
+      currentYear = today.getFullYear();
+      currentMonth = today.getMonth();
+      selectedDate = formatDate(today.getFullYear(), today.getMonth(), today.getDate());
+      renderCalendar();
+      renderSelectedEvents();
+    };
+
+    renderCalendar();
+    renderSelectedEvents();
+  </script>
+</body>
+</html>
+
